@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Just a moment…</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;display:grid;place-items:center;
+    background:#020617;
+    background-image:radial-gradient(circle at 50% -10%,#1e293b,#020617 65%);
+    color:#e2e8f0;overflow:hidden;
+  }
+  .card{
+    width:min(420px,90vw);background:#0b1220;border:1px solid #1e293b;
+    border-radius:18px;padding:30px 28px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.9);
+  }
+  h1{font-size:1.15rem;font-weight:600;margin-bottom:6px}
+  p.sub{font-size:.85rem;color:#94a3b8;margin-bottom:22px;line-height:1.5}
+  .captcha{
+    display:flex;align-items:center;gap:14px;background:#131c2e;
+    border:1px solid #24304a;border-radius:10px;padding:16px 18px;
+    cursor:pointer;user-select:none;transition:.2s;
+  }
+  .captcha:hover{border-color:#3b82f6;background:#16203a}
+  .box{
+    width:26px;height:26px;border:2px solid #64748b;border-radius:6px;
+    flex:0 0 auto;position:relative;transition:.2s;
+  }
+  .captcha.done .box{border-color:#22c55e;background:#22c55e}
+  .captcha.done .box::after{
+    content:"";position:absolute;left:8px;top:3px;width:6px;height:12px;
+    border:solid #04140a;border-width:0 3px 3px 0;transform:rotate(45deg);
+  }
+  .label{font-size:.92rem;color:#cbd5e1}
+  .spinner{
+    width:26px;height:26px;border:3px solid #334155;border-top-color:#3b82f6;
+    border-radius:50%;animation:spin .7s linear infinite;display:none;flex:0 0 auto;
+  }
+  .captcha.loading .box{display:none}
+  .captcha.loading .spinner{display:block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .progress{height:4px;background:#1e293b;border-radius:99px;margin-top:18px;overflow:hidden;display:none}
+  .progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#8b5cf6);transition:width .3s}
+  
+  /* Updated CSS for the video layer */
+  #videoLayer{position:fixed;inset:0;background:#000;display:none;z-index:999}
+  #videoLayer.show{display:block}
+  #videoLayer video{width:100%;height:100%;object-fit:contain;background:#000;}
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Just a moment…</h1>
+    <p class="sub">We're checking your browser before you continue.</p>
+
+    <div class="captcha" id="captcha">
+      <div class="box"></div>
+      <div class="spinner"></div>
+      <div class="label" id="label">I'm not a robot</div>
+    </div>
+
+    <div class="progress" id="progress"><span id="bar"></span></div>
+  </div>
+
+  <div id="videoLayer"></div>
+
+<script>
+  const captcha  = document.getElementById('captcha');
+  const label    = document.getElementById('label');
+  const progress = document.getElementById('progress');
+  const bar      = document.getElementById('bar');
+  const layer    = document.getElementById('videoLayer');
+
+  let started = false;
+
+  captcha.addEventListener('click', () => {
+    if (started) return;
+    started = true;
+
+    // 1. fake "verifying" spinner
+    captcha.classList.add('loading');
+    label.textContent = 'Verifying…';
+
+    setTimeout(() => {
+      // 2. verified
+      captcha.classList.remove('loading');
+      captcha.classList.add('done');
+      label.textContent = 'Verified! Loading…';
+      progress.style.display = 'block';
+
+      // 3. fake progress bar
+      let p = 0;
+      const iv = setInterval(() => {
+        p = Math.min(100, p + Math.random() * 18);
+        bar.style.width = p + '%';
+        if (p >= 100) {
+          clearInterval(iv);
+          setTimeout(go, 400);
+        }
+      }, 220);
+    }, 1400);
+  });
+
+  function go() {
+    // Create the video element
+    const video = document.createElement('video');
+    video.src = 'rickroll.mp4';   // Make sure your file is renamed to this!
+    video.autoplay = true;
+    video.loop = false;
+    video.controls = true;        // Gives them a play/pause bar (feels more real)
+    
+    // Append video to the overlay and show it
+    layer.appendChild(video);
+    layer.classList.add('show');
+
+    // Try to force play (some browsers require this after user interaction)
+    video.play().catch(error => {
+      console.log("Autoplay was blocked by the browser. User must click play.", error);
+    });
+  }
+</script>
+</body>
+</html>
